@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMP 10 Batam - Sistem Informasi Kelas</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #0066ff;
+            --secondary-blue: #0099ff;
+            --light-blue: #e6f0ff;
+            --white: #ffffff;
+            --dark-blue: #0047b3;
+            --gray: #f5f7fa;
+            --dark-gray: #5a6c85;
+            --accent: #00ccff;
+            --gradient-start: #0066ff;
+            --gradient-end: #00ccff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--light-blue) 0%, var(--white) 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            padding: 20px;
+            color: #2c3e50;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .school-logo {
+            width: 140px;
+            height: 140px;
+            margin-bottom: 20px;
+            border-radius: 50%;
+            box-shadow: 0 10px 30px rgba(0, 102, 255, 0.2);
+            transform: translateZ(0);
+            transition: transform 0.5s ease;
+            object-fit: cover;
+            border: 3px solid var(--white);
+            background: var(--white);
+        }
+
+        .school-logo:hover {
+            transform: scale(1.05) rotate(5deg);
+            box-shadow: 0 15px 35px rgba(0, 102, 255, 0.3);
+        }
+
+        h1 {
+            color: var(--dark-blue);
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: var(--dark-gray);
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            font-weight: 400;
+        }
+
+        .search-container {
+            background: var(--white);
+            padding: 40px;
+            border-radius: 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            margin-bottom: 40px;
+            animation: slideUp 1s ease-out;
+            transform-style: preserve-3d;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .search-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+        }
+
+        .search-title {
+            color: var(--primary-blue);
+            margin-bottom: 25px;
+            font-size: 1.6rem;
+            font-weight: 600;
+        }
+
+        .search-box {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        input, select {
+            padding: 16px 25px;
+            min-width: 280px;
+            border: 2px solid var(--light-blue);
+            border-radius: 12px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+            background: var(--gray);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        input:focus, select:focus {
+            border-color: var(--secondary-blue);
+            box-shadow: 0 0 20px rgba(0, 153, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        button {
+            padding: 16px 30px;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 102, 255, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 102, 255, 0.4);
+        }
+
+        .class-info {
+            display: none;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            animation: fadeIn 1s ease-out;
+            margin-top: 20px;
+        }
+
+        .info-card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(0, 153, 255, 0.1);
+        }
+
+        .info-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+        }
+
+        .info-card:hover {
+            transform: translateY(-10px) rotateX(5deg);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-title {
+            color: var(--primary-blue);
+            font-size: 1.4rem;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--light-blue);
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .card-title i {
+            margin-right: 12px;
+            font-size: 1.6rem;
+            color: var(--secondary-blue);
+        }
+
+        .task-list {
+            list-style-type: none;
+        }
+
+        .task-item {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--gray);
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .task-item:hover {
+            background: var(--light-blue);
+            padding-left: 10px;
+            border-radius: 8px;
+        }
+
+        .task-item:last-child {
+            border-bottom: none;
+        }
+
+        .task-item i {
+            margin-right: 12px;
+            color: var(--secondary-blue);
+        }
+
+        .student-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .student-item {
+            background: var(--light-blue);
+            padding: 18px;
+            border-radius: 12px;
+            text-align: left;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .student-item:hover {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 102, 255, 0.3);
+        }
+
+        .student-item strong {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .class-map {
+            width: 100%;
+            height: 300px;
+            background: var(--gray);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--dark-gray);
+            overflow: hidden;
+            box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .class-map img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .schedule-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .schedule-day {
+            background: var(--light-blue);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .day-title {
+            font-weight: bold;
+            color: var(--dark-blue);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            font-size: 1.2rem;
+        }
+
+        .day-title i {
+            margin-right: 12px;
+            color: var(--secondary-blue);
+        }
+
+        .subjects {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .subject {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            padding: 10px 16px;
+            border-radius: 25px;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 10px rgba(0, 102, 255, 0.2);
+        }
+
+        .subject-time {
+            font-size: 0.85rem;
+            margin-top: 5px;
+            opacity: 0.9;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+            animation: pulse 2s infinite;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: var(--secondary-blue);
+            margin-bottom: 25px;
+        }
+
+        .empty-state h3 {
+            color: var(--dark-blue);
+            margin-bottom: 15px;
+            font-size: 1.8rem;
+        }
+
+        .empty-state p {
+            color: var(--dark-gray);
+            margin-bottom: 25px;
+            font-size: 1.1rem;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .tech-spinner {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+        }
+
+        .tech-spinner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 5px solid transparent;
+            border-top: 5px solid var(--accent);
+            border-radius: 50%;
+            animation: techSpin 1.5s linear infinite;
+            box-shadow: 0 0 20px var(--accent);
+        }
+
+        .tech-spinner::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: calc(100% - 20px);
+            height: calc(100% - 20px);
+            border: 5px solid transparent;
+            border-bottom: 5px solid var(--secondary-blue);
+            border-radius: 50%;
+            animation: techSpinReverse 1.2s linear infinite;
+        }
+
+        .loading p {
+            color: var(--dark-blue);
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 15s infinite linear;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes techSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes techSpinReverse {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(-360deg); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08); }
+            50% { transform: scale(1.02); box-shadow: 0 20px 40px rgba(0, 102, 255, 0.15); }
+            100% { transform: scale(1); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08); }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) translateX(0) rotate(0deg); }
+            100% { transform: translateY(-100vh) translateX(100vw) rotate(360deg); }
+        }
+
+        @media (max-width: 968px) {
+            .class-info {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .search-box {
+                flex-direction: column;
+            }
+            
+            input, select {
+                width: 100%;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .info-card {
+                padding: 25px;
+            }
+            
+            .subjects {
+                justify-content: center;
+            }
+            
+            .search-container {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    
+    <div class="container">
+        <header>
+            <img src="https://files.catbox.moe/f1jjfu.jpeg" alt="Logo SMP 10 Batam" class="school-logo">
+            <h1>SMP 10 Batam</h1>
+            <p class="subtitle">Sistem Informasi Kelas Digital</p>
+        </header>
+
+        <div class="search-container">
+            <h2 class="search-title">Cari Informasi Kelas Anda</h2>
+            <div class="search-box">
+                <select id="classSelector">
+                    <option value="">Pilih Kelas</option>
+                    <!-- Daftar kelas akan dimuat dari Firebase -->
+                </select>
+                <button id="searchButton">
+                    <i class="fas fa-search"></i> Tampilkan Informasi
+                </button>
+            </div>
+            <div class="loading" id="loadingIndicator">
+                <div class="tech-spinner"></div>
+                <p>Memuat data kelas...</p>
+            </div>
+        </div>
+
+        <div class="class-info" id="classInfo">
+            <!-- Informasi Tugas -->
+            <div class="info-card">
+                <h3 class="card-title"><i class="fas fa-tasks"></i> Daftar Tugas</h3>
+                <ul class="task-list" id="taskList">
+                    <!-- Data tugas akan dimuat dari Firebase -->
+                </ul>
+            </div>
+
+            <!-- Informasi Siswa -->
+            <div class="info-card">
+                <h3 class="card-title"><i class="fas fa-users"></i> Daftar Siswa</h3>
+                <div class="student-list" id="studentList">
+                    <!-- Data siswa akan dimuat dari Firebase -->
+                </div>
+            </div>
+
+            <!-- Denah Kelas -->
+            <div class="info-card">
+                <h3 class="card-title"><i class="fas fa-chalkboard"></i> Denah Kelas</h3>
+                <div class="class-map" id="classMap">
+                    <!-- Denah kelas akan dimuat dari Firebase -->
+                </div>
+            </div>
+
+            <!-- Jadwal Kelas -->
+            <div class="info-card">
+                <h3 class="card-title"><i class="fas fa-calendar-alt"></i> Jadwal Pelajaran</h3>
+                <div class="schedule-list" id="scheduleList">
+                    <!-- Data jadwal akan dimuat dari Firebase -->
+                </div>
+            </div>
+        </div>
+
+        <div class="empty-state" id="emptyState">
+            <i class="fas fa-inbox"></i>
+            <h3>Belum Ada Data Kelas</h3>
+            <p>Admin belum menambahkan data kelas. Silakan hubungi administrator untuk mengisi data.</p>
+        </div>
+    </div>
+
+    <script>
+        // Konfigurasi Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyA_QzbdScTX2dLdu_VchsPH1JL-1tn3RcI",
+            authDomain: "chat-message-fcf6f.firebaseapp.com",
+            databaseURL: "https://chat-message-fcf6f-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "chat-message-fcf6f",
+            storageBucket: "chat-message-fcf6f.appspot.com",
+            messagingSenderId: "137162503818",
+            appId: "1:137162503818:web:2c782da021738705e99f73"
+        };
+
+        // Inisialisasi Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Elemen DOM
+        const classSelector = document.getElementById('classSelector');
+        const searchButton = document.getElementById('searchButton');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const classInfo = document.getElementById('classInfo');
+        const taskList = document.getElementById('taskList');
+        const studentList = document.getElementById('studentList');
+        const classMap = document.getElementById('classMap');
+        const scheduleList = document.getElementById('scheduleList');
+        const emptyState = document.getElementById('emptyState');
+        const particlesContainer = document.getElementById('particles');
+
+        // Buat partikel latar belakang
+        createParticles();
+
+        function createParticles() {
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                const size = Math.random() * 15 + 5;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                
+                particle.style.left = `${Math.random() * 100}vw`;
+                particle.style.top = `${Math.random() * 100}vh`;
+                
+                const duration = Math.random() * 20 + 10;
+                particle.style.animationDuration = `${duration}s`;
+                particle.style.animationDelay = `-${Math.random() * 10}s`;
+                
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Event listener untuk pencarian kelas
+        searchButton.addEventListener('click', searchClass);
+
+        // Muat daftar kelas yang tersedia
+        loadAvailableClasses();
+
+        function loadAvailableClasses() {
+            const classesRef = database.ref('classes');
+            
+            classesRef.once('value')
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const classesData = snapshot.val();
+                        const classOptions = Object.keys(classesData);
+                        
+                        // Kosongkan dropdown terlebih dahulu
+                        classSelector.innerHTML = '<option value="">Pilih Kelas</option>';
+                        
+                        // Tambahkan opsi untuk setiap kelas
+                        classOptions.forEach(className => {
+                            const option = document.createElement('option');
+                            option.value = className;
+                            option.textContent = `Kelas ${className}`;
+                            classSelector.appendChild(option);
+                        });
+                        
+                        // Sembunyikan empty state jika ada kelas
+                        emptyState.style.display = 'none';
+                    } else {
+                        // Tampilkan empty state jika tidak ada kelas
+                        emptyState.style.display = 'block';
+                        classInfo.style.display = 'none';
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error loading classes:', error);
+                    emptyState.style.display = 'block';
+                    classInfo.style.display = 'none';
+                });
+        }
+
+        function searchClass() {
+            const className = classSelector.value;
+            
+            if (!className) {
+                alert('Silakan pilih kelas terlebih dahulu!');
+                return;
+            }
+
+            loadingIndicator.style.display = 'block';
+            classInfo.style.display = 'none';
+            emptyState.style.display = 'none';
+
+            // Ambil data dari Firebase
+            const classRef = database.ref('classes/' + className);
+            
+            classRef.once('value')
+                .then((snapshot) => {
+                    loadingIndicator.style.display = 'none';
+                    
+                    if (snapshot.exists()) {
+                        const classData = snapshot.val();
+                        displayClassInfo(classData, className);
+                    } else {
+                        alert('Data kelas tidak ditemukan!');
+                        emptyState.style.display = 'block';
+                    }
+                })
+                .catch((error) => {
+                    loadingIndicator.style.display = 'none';
+                    console.error('Error fetching data:', error);
+                    alert('Terjadi kesalahan saat mengambil data. Silakan coba lagi.');
+                    emptyState.style.display = 'block';
+                });
+        }
+
+        function displayClassInfo(classData, className) {
+            // Tampilkan informasi tugas
+            taskList.innerHTML = '';
+            if (classData.tasks && Object.keys(classData.tasks).length > 0) {
+                Object.values(classData.tasks).forEach(task => {
+                    const li = document.createElement('li');
+                    li.className = 'task-item';
+                    li.innerHTML = `<i class="fas fa-book"></i> ${task.name} - ${task.description} (Deadline: ${task.deadline})`;
+                    taskList.appendChild(li);
+                });
+            } else {
+                taskList.innerHTML = '<li class="task-item">Tidak ada tugas</li>';
+            }
+
+            // Tampilkan informasi siswa
+            studentList.innerHTML = '';
+            if (classData.students && Object.keys(classData.students).length > 0) {
+                Object.values(classData.students).forEach(student => {
+                    const div = document.createElement('div');
+                    div.className = 'student-item';
+                    div.innerHTML = `
+                        <strong>${student.name}</strong>
+                        <span>${student.role}</span>
+                    `;
+                    studentList.appendChild(div);
+                });
+            } else {
+                studentList.innerHTML = '<div class="student-item">Data siswa tidak tersedia</div>';
+            }
+
+            // Tampilkan denah kelas
+            if (classData.layout && classData.layout.description) {
+                classMap.innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <h4>Denah Kelas ${className}</h4>
+                        <p>${classData.layout.description}</p>
+                    </div>
+                `;
+            } else {
+                classMap.innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <h4>Denah Kelas ${className}</h4>
+                        <p>Belum ada denah kelas yang diatur</p>
+                    </div>
+                `;
+            }
+
+            // Tampilkan jadwal kelas dalam format yang mudah dibaca
+            scheduleList.innerHTML = '';
+            if (classData.schedule && Object.keys(classData.schedule).length > 0) {
+                // Kelompokkan jadwal berdasarkan hari
+                const scheduleByDay = {};
+                
+                Object.values(classData.schedule).forEach(scheduleItem => {
+                    if (!scheduleByDay[scheduleItem.day]) {
+                        scheduleByDay[scheduleItem.day] = [];
+                    }
+                    scheduleByDay[scheduleItem.day].push(scheduleItem);
+                });
+                
+                // Tampilkan jadwal per hari
+                const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                
+                days.forEach(day => {
+                    if (scheduleByDay[day] && scheduleByDay[day].length > 0) {
+                        const dayElement = document.createElement('div');
+                        dayElement.className = 'schedule-day';
+                        
+                        const dayTitle = document.createElement('div');
+                        dayTitle.className = 'day-title';
+                        dayTitle.innerHTML = `<i class="fas fa-calendar-day"></i> ${day.toUpperCase()}`;
+                        
+                        const subjectsContainer = document.createElement('div');
+                        subjectsContainer.className = 'subjects';
+                        
+                        // Tampilkan setiap mata pelajaran dengan waktunya
+                        scheduleByDay[day].forEach(item => {
+                            const subjectElement = document.createElement('div');
+                            subjectElement.className = 'subject';
+                            subjectElement.innerHTML = `
+                                ${item.subject}
+                                <div class="subject-time">${item.time}</div>
+                            `;
+                            subjectsContainer.appendChild(subjectElement);
+                        });
+                        
+                        dayElement.appendChild(dayTitle);
+                        dayElement.appendChild(subjectsContainer);
+                        scheduleList.appendChild(dayElement);
+                    }
+                });
+            } else {
+                scheduleList.innerHTML = '<div class="schedule-day">Jadwal belum tersedia</div>';
+            }
+
+            // Tampilkan section informasi kelas dengan animasi
+            classInfo.style.display = 'grid';
+            emptyState.style.display = 'none';
+            setTimeout(() => {
+                classInfo.style.opacity = 1;
+                classInfo.style.transform = 'translateY(0)';
+            }, 100);
+        }
+
+        // Animasi scroll halus
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

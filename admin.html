@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - SMP 10 Batam</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #0066ff;
+            --secondary-blue: #0099ff;
+            --light-blue: #e6f0ff;
+            --white: #ffffff;
+            --dark-blue: #0047b3;
+            --gray: #f5f7fa;
+            --dark-gray: #5a6c85;
+            --accent: #00ccff;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --gradient-start: #0066ff;
+            --gradient-end: #00ccff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--light-blue) 0%, var(--white) 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            padding: 20px;
+            color: #2c3e50;
+        }
+
+        .admin-container {
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .school-logo {
+            width: 140px;
+            height: 140px;
+            margin-bottom: 20px;
+            border-radius: 50%;
+            box-shadow: 0 10px 30px rgba(0, 102, 255, 0.2);
+            transform: translateZ(0);
+            transition: transform 0.5s ease;
+            object-fit: cover;
+            border: 3px solid var(--white);
+            background: var(--white);
+        }
+
+        .school-logo:hover {
+            transform: scale(1.05) rotate(5deg);
+            box-shadow: 0 15px 35px rgba(0, 102, 255, 0.3);
+        }
+
+        h1 {
+            color: var(--dark-blue);
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: var(--dark-gray);
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            font-weight: 400;
+        }
+
+        .admin-panel {
+            background: var(--white);
+            padding: 40px;
+            border-radius: 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 40px;
+            animation: slideUp 1s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .admin-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--light-blue);
+        }
+
+        .panel-title {
+            color: var(--primary-blue);
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .class-selector {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        select, input, textarea {
+            padding: 16px 20px;
+            border: 2px solid var(--light-blue);
+            border-radius: 12px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+            background: var(--gray);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+            width: 100%;
+        }
+
+        select:focus, input:focus, textarea:focus {
+            border-color: var(--secondary-blue);
+            box-shadow: 0 0 20px rgba(0, 153, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .tab-navigation {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .tab-button {
+            padding: 14px 25px;
+            background: var(--light-blue);
+            color: var(--dark-blue);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .tab-button.active {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 102, 255, 0.3);
+        }
+
+        .tab-button:hover {
+            background: var(--secondary-blue);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: var(--dark-blue);
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .btn {
+            padding: 16px 30px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 102, 255, 0.4);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-3px);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-3px);
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+            transform: translateY(-3px);
+        }
+
+        .item-list {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--light-blue);
+            border-radius: 15px;
+            padding: 20px;
+            background: var(--gray);
+        }
+
+        .list-item {
+            padding: 20px;
+            background: var(--white);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .list-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .list-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .list-item-content {
+            flex: 1;
+        }
+
+        .list-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .add-class-form {
+            background: var(--light-blue);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .class-list {
+            margin-top: 20px;
+        }
+
+        .class-item {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 18px 25px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .notification.success {
+            background: var(--success);
+        }
+
+        .notification.error {
+            background: var(--danger);
+        }
+
+        .website-link {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            text-decoration: none;
+            box-shadow: 0 5px 15px rgba(0, 102, 255, 0.3);
+            transition: all 0.3s ease;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .website-link:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 102, 255, 0.4);
+        }
+
+        .edit-form {
+            background: var(--light-blue);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 15px;
+            display: none;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .tech-spinner {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 15px;
+        }
+
+        .tech-spinner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 4px solid transparent;
+            border-top: 4px solid var(--accent);
+            border-radius: 50%;
+            animation: techSpin 1.5s linear infinite;
+            box-shadow: 0 0 15px var(--accent);
+        }
+
+        .tech-spinner::after {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            width: calc(100% - 16px);
+            height: calc(100% - 16px);
+            border: 4px solid transparent;
+            border-bottom: 4px solid var(--secondary-blue);
+            border-radius: 50%;
+            animation: techSpinReverse 1.2s linear infinite;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes techSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes techSpinReverse {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(-360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .panel-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+            
+            .class-selector {
+                width: 100%;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .list-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .list-item-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+            
+            .admin-panel {
+                padding: 25px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container" id="adminPanel">
+        <header>
+            <img src="https://files.catbox.moe/f1jjfu.jpeg" alt="Logo SMP 10 Batam" class="school-logo">
+            <h1>Admin Panel</h1>
+            <p class="subtitle">SMP 10 Batam - Manajemen Informasi Kelas</p>
+        </header>
+
+        <div class="admin-panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Kelola Informasi Kelas</h2>
+                <div class="class-selector">
+                    <select id="classSelector">
+                        <option value="">Pilih Kelas</option>
+                        <!-- Daftar kelas akan dimuat dari Firebase -->
+                    </select>
+                </div>
+            </div>
+
+            <!-- Form Tambah Kelas Baru -->
+            <div class="add-class-form">
+                <h3>Tambah Kelas Baru</h3>
+                <div class="form-group">
+                    <label for="newClassName">Nama Kelas</label>
+                    <input type="text" id="newClassName" placeholder="Contoh: 7A, 8B, 9C">
+                </div>
+                <button class="btn btn-success" id="addClassButton">
+                    <i class="fas fa-plus"></i> Tambah Kelas
+                </button>
+            </div>
+
+            <div class="class-list" id="classList">
+                <!-- Daftar kelas akan dimuat di sini -->
+            </div>
+
+            <div class="tab-navigation">
+                <button class="tab-button active" data-tab="tasks">Tugas</button>
+                <button class="tab-button" data-tab="students">Siswa</button>
+                <button class="tab-button" data-tab="layout">Denah Kelas</button>
+                <button class="tab-button" data-tab="schedule">Jadwal</button>
+            </div>
+
+            <!-- Tab Tugas -->
+            <div class="tab-content active" id="tasksTab">
+                <div class="form-grid">
+                    <div>
+                        <h3>Tambah Tugas Baru</h3>
+                        <div class="form-group">
+                            <label for="taskName">Nama Tugas</label>
+                            <input type="text" id="taskName" placeholder="Nama tugas">
+                        </div>
+                        <div class="form-group">
+                            <label for="taskDeadline">Deadline</label>
+                            <input type="date" id="taskDeadline">
+                        </div>
+                        <div class="form-group">
+                            <label for="taskDescription">Deskripsi</label>
+                            <textarea id="taskDescription" placeholder="Deskripsi tugas"></textarea>
+                        </div>
+                        <button class="btn btn-primary" id="addTaskButton">
+                            <i class="fas fa-plus"></i> Tambah Tugas
+                        </button>
+                    </div>
+                    <div>
+                        <h3>Daftar Tugas</h3>
+                        <div class="item-list" id="taskList">
+                            <!-- Daftar tugas akan dimuat di sini -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Siswa -->
+            <div class="tab-content" id="studentsTab">
+                <div class="form-grid">
+                    <div>
+                        <h3>Tambah Siswa Baru</h3>
+                        <div class="form-group">
+                            <label for="studentName">Nama Siswa</label>
+                            <input type="text" id="studentName" placeholder="Nama lengkap siswa">
+                        </div>
+                        <div class="form-group">
+                            <label for="studentRole">Peran/Jabatan</label>
+                            <input type="text" id="studentRole" placeholder="Contoh: Ketua kelas, Bendahara, dll.">
+                        </div>
+                        <button class="btn btn-primary" id="addStudentButton">
+                            <i class="fas fa-plus"></i> Tambah Siswa
+                        </button>
+                    </div>
+                    <div>
+                        <h3>Daftar Siswa</h3>
+                        <div class="item-list" id="studentList">
+                            <!-- Daftar siswa akan dimuat di sini -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Denah Kelas -->
+            <div class="tab-content" id="layoutTab">
+                <div class="form-grid">
+                    <div>
+                        <h3>Update Denah Kelas</h3>
+                        <div class="form-group">
+                            <label for="classLayout">Deskripsi Denah Kelas</label>
+                            <textarea id="classLayout" placeholder="Deskripsikan denah kelas (posisi meja, papan tulis, dll.)"></textarea>
+                        </div>
+                        <button class="btn btn-primary" id="updateLayoutButton">
+                            <i class="fas fa-sync"></i> Update Denah
+                        </button>
+                    </div>
+                    <div>
+                        <h3>Pratinjau Denah</h3>
+                        <div class="class-map-preview">
+                            <p id="layoutPreview">Belum ada denah kelas yang diatur</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Jadwal -->
+            <div class="tab-content" id="scheduleTab">
+                <div class="form-grid">
+                    <div>
+                        <h3>Tambah Jadwal Baru</h3>
+                        <div class="form-group">
+                            <label for="scheduleDay">Hari</label>
+                            <select id="scheduleDay">
+                                <option value="Senin">Senin</option>
+                                <option value="Selasa">Selasa</option>
+                                <option value="Rabu">Rabu</option>
+                                <option value="Kamis">Kamis</option>
+                                <option value="Jumat">Jumat</option>
+                                <option value="Sabtu">Sabtu</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="scheduleSubject">Mata Pelajaran</label>
+                            <input type="text" id="scheduleSubject" placeholder="Nama mata pelajaran">
+                        </div>
+                        <div class="form-group">
+                            <label for="scheduleTime">Waktu Berlaku</label>
+                            <input type="text" id="scheduleTime" placeholder="Contoh: 07.00-08.30">
+                        </div>
+                        <button class="btn btn-primary" id="addScheduleButton">
+                            <i class="fas fa-plus"></i> Tambah Jadwal
+                        </button>
+                    </div>
+                    <div>
+                        <h3>Daftar Jadwal</h3>
+                        <div class="item-list" id="scheduleList">
+                            <!-- Daftar jadwal akan dimuat di sini -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a href="index.html" class="website-link">
+        <i class="fas fa-home"></i> Kembali ke Website
+    </a>
+
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // Konfigurasi Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyA_QzbdScTX2dLdu_VchsPH1JL-1tn3RcI",
+            authDomain: "chat-message-fcf6f.firebaseapp.com",
+            databaseURL: "https://chat-message-fcf6f-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "chat-message-fcf6f",
+            storageBucket: "chat-message-fcf6f.appspot.com",
+            messagingSenderId: "137162503818",
+            appId: "1:137162503818:web:2c782da021738705e99f73"
+        };
+
+        // Inisialisasi Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Elemen DOM
+        const classSelector = document.getElementById('classSelector');
+        const newClassName = document.getElementById('newClassName');
+        const addClassButton = document.getElementById('addClassButton');
+        const classList = document.getElementById('classList');
+        const notification = document.getElementById('notification');
+        
+        // Tab elements
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        // Form elements
+        const taskName = document.getElementById('taskName');
+        const taskDeadline = document.getElementById('taskDeadline');
+        const taskDescription = document.getElementById('taskDescription');
+        const addTaskButton = document.getElementById('addTaskButton');
+        const taskList = document.getElementById('taskList');
+        
+        const studentName = document.getElementById('studentName');
+        const studentRole = document.getElementById('studentRole');
+        const addStudentButton = document.getElementById('addStudentButton');
+        const studentList = document.getElementById('studentList');
+        
+        const classLayout = document.getElementById('classLayout');
+        const updateLayoutButton = document.getElementById('updateLayoutButton');
+        const layoutPreview = document.getElementById('layoutPreview');
+        
+        const scheduleDay = document.getElementById('scheduleDay');
+        const scheduleSubject = document.getElementById('scheduleSubject');
+        const scheduleTime = document.getElementById('scheduleTime');
+        const addScheduleButton = document.getElementById('addScheduleButton');
+        const scheduleList = document.getElementById('scheduleList');
+        
+        // State variables
+        let currentClass = '';
+        let editingItemId = null;
+        let editingItemType = null;
+
+        // Event Listeners
+        classSelector.addEventListener('change', handleClassChange);
+        addClassButton.addEventListener('click', addNewClass);
+        
+        // Tab navigation
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.getAttribute('data-tab');
+                
+                // Update active tab button
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                // Update active tab content
+                tabContents.forEach(tab => tab.classList.remove('active'));
+                document.getElementById(`${tabId}Tab`).classList.add('active');
+            });
+        });
+        
+        // Form submission handlers
+        addTaskButton.addEventListener('click', addTask);
+        addStudentButton.addEventListener('click', addStudent);
+        updateLayoutButton.addEventListener('click', updateLayout);
+        addScheduleButton.addEventListener('click', addSchedule);
+
+        // Muat daftar kelas yang tersedia
+        loadAvailableClasses();
+
+        function loadAvailableClasses() {
+            const classesRef = database.ref('classes');
+            
+            classesRef.once('value')
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const classesData = snapshot.val();
+                        const classOptions = Object.keys(classesData);
+                        
+                        // Kosongkan dropdown terlebih dahulu
+                        classSelector.innerHTML = '<option value="">Pilih Kelas</option>';
+                        classList.innerHTML = '';
+                        
+                        // Tambahkan opsi untuk setiap kelas
+                        classOptions.forEach(className => {
+                            // Tambahkan ke dropdown
+                            const option = document.createElement('option');
+                            option.value = className;
+                            option.textContent = `Kelas ${className}`;
+                            classSelector.appendChild(option);
+                            
+                            // Tambahkan ke daftar kelas
+                            const classItem = document.createElement('div');
+                            classItem.className = 'class-item';
+                            classItem.innerHTML = `
+                                <div class="list-item-content">
+                                    <strong>Kelas ${className}</strong>
+                                </div>
+                                <div class="list-item-actions">
+                                    <button class="btn btn-danger" onclick="deleteClass('${className}')">
+                                        <i class="fas fa-trash"></i> Hapus
+                                    </button>
+                                </div>
+                            `;
+                            classList.appendChild(classItem);
+                        });
+                    } else {
+                        classList.innerHTML = '<p>Belum ada kelas yang ditambahkan</p>';
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error loading classes:', error);
+                    classList.innerHTML = '<p>Gagal memuat daftar kelas</p>';
+                });
+        }
+
+        // Fungsi untuk menambahkan kelas baru
+        function addNewClass() {
+            const className = newClassName.value.trim().toUpperCase();
+            
+            if (!className) {
+                showNotification('Nama kelas harus diisi!', 'error');
+                return;
+            }
+            
+            // Periksa apakah kelas sudah ada
+            const classRef = database.ref('classes/' + className);
+            
+            classRef.once('value')
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        showNotification('Kelas sudah ada!', 'error');
+                    } else {
+                        // Buat template data kelas
+                        const classData = {
+                            tasks: {},
+                            students: {},
+                            layout: {
+                                description: 'Belum ada denah kelas yang diatur'
+                            },
+                            schedule: {}
+                        };
+                        
+                        // Simpan ke Firebase
+                        classRef.set(classData)
+                            .then(() => {
+                                showNotification(`Kelas ${className} berhasil ditambahkan!`, 'success');
+                                newClassName.value = '';
+                                loadAvailableClasses(); // Muat ulang daftar kelas
+                            })
+                            .catch((error) => {
+                                console.error('Error adding class:', error);
+                                showNotification('Gagal menambahkan kelas', 'error');
+                            });
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error checking class:', error);
+                    showNotification('Terjadi kesalahan', 'error');
+                });
+        }
+
+        // Fungsi untuk menghapus kelas
+        function deleteClass(className) {
+            if (confirm(`Apakah Anda yakin ingin menghapus Kelas ${className}?`)) {
+                const classRef = database.ref('classes/' + className);
+                
+                classRef.remove()
+                    .then(() => {
+                        showNotification(`Kelas ${className} berhasil dihapus!`, 'success');
+                        loadAvailableClasses(); // Muat ulang daftar kelas
+                        
+                        // Jika kelas yang sedang aktif dihapus, reset form
+                        if (currentClass === className) {
+                            currentClass = '';
+                            classSelector.value = '';
+                            clearAllData();
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Error deleting class:', error);
+                        showNotification('Gagal menghapus kelas', 'error');
+                    });
+            }
+        }
+
+        // Fungsi untuk menangani perubahan kelas
+        function handleClassChange() {
+            currentClass = classSelector.value;
+            if (currentClass) {
+                loadClassData(currentClass);
+            } else {
+                clearAllData();
+            }
+        }
+
+        // Fungsi untuk memuat data kelas
+        function loadClassData(className) {
+            const classRef = database.ref('classes/' + className);
+            
+            classRef.once('value')
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const classData = snapshot.val();
+                        displayClassData(classData);
+                    } else {
+                        clearAllData();
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error fetching data:', error);
+                    showNotification('Gagal memuat data kelas', 'error');
+                });
+        }
+
+        // Fungsi untuk menampilkan data kelas
+        function displayClassData(classData) {
+            // Tampilkan tugas
+            displayTasks(classData.tasks);
+            
+            // Tampilkan siswa
+            displayStudents(classData.students);
+            
+            // Tampilkan denah kelas
+            displayLayout(classData.layout);
+            
+            // Tampilkan jadwal
+            displaySchedule(classData.schedule);
+        }
+
+        // Fungsi untuk menampilkan notifikasi
+        function showNotification(message, type) {
+            notification.textContent = message;
+            notification.className = `notification ${type} show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Fungsi untuk menambahkan tugas
+        function addTask() {
+            if (!currentClass) {
+                showNotification('Pilih kelas terlebih dahulu!', 'error');
+                return;
+            }
+            
+            const name = taskName.value.trim();
+            const deadline = taskDeadline.value;
+            const description = taskDescription.value.trim();
+            
+            if (!name || !deadline) {
+                showNotification('Nama tugas dan deadline harus diisi!', 'error');
+                return;
+            }
+            
+            const taskRef = database.ref(`classes/${currentClass}/tasks`);
+            const newTaskRef = editingItemId ? 
+                taskRef.child(editingItemId) : 
+                taskRef.push();
+            
+            newTaskRef.set({
+                name,
+                deadline,
+                description
+            })
+            .then(() => {
+                const message = editingItemId ? 
+                    'Tugas berhasil diperbarui!' : 
+                    'Tugas berhasil ditambahkan!';
+                
+                showNotification(message, 'success');
+                
+                // Reset form
+                taskName.value = '';
+                taskDeadline.value = '';
+                taskDescription.value = '';
+                editingItemId = null;
+                editingItemType = null;
+            })
+            .catch((error) => {
+                console.error('Error adding/updating task:', error);
+                showNotification('Gagal menambahkan/memperbarui tugas', 'error');
+            });
+        }
+
+        // Fungsi untuk menampilkan tugas
+        function displayTasks(tasks) {
+            taskList.innerHTML = '';
+            
+            if (tasks) {
+                Object.entries(tasks).forEach(([id, task]) => {
+                    const taskElement = document.createElement('div');
+                    taskElement.className = 'list-item';
+                    taskElement.innerHTML = `
+                        <div class="list-item-content">
+                            <strong>${task.name}</strong> - Deadline: ${task.deadline}
+                            ${task.description ? `<br><small>${task.description}</small>` : ''}
+                        </div>
+                        <div class="list-item-actions">
+                            <button class="btn btn-warning" onclick="editItem('${id}', 'task', ${JSON.stringify(task).replace(/"/g, '&quot;')})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteItem('${id}', 'task')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    taskList.appendChild(taskElement);
+                });
+            }
+            
+            if (taskList.children.length === 0) {
+                taskList.innerHTML = '<p>Belum ada tugas untuk kelas ini</p>';
+            }
+        }
+
+        // Fungsi untuk mengedit item
+        function editItem(itemId, itemType, itemData) {
+            editingItemId = itemId;
+            editingItemType = itemType;
+            
+            if (itemType === 'task') {
+                taskName.value = itemData.name;
+                taskDeadline.value = itemData.deadline;
+                taskDescription.value = itemData.description || '';
+                
+                // Scroll ke form tugas
+                document.getElementById('tasksTab').scrollIntoView({ behavior: 'smooth' });
+            }
+            else if (itemType === 'student') {
+                studentName.value = itemData.name;
+                studentRole.value = itemData.role;
+                
+                // Scroll ke form siswa
+                document.getElementById('studentsTab').scrollIntoView({ behavior: 'smooth' });
+            }
+            else if (itemType === 'schedule') {
+                scheduleDay.value = itemData.day;
+                scheduleSubject.value = itemData.subject;
+                scheduleTime.value = itemData.time;
+                
+                // Scroll ke form jadwal
+                document.getElementById('scheduleTab').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Fungsi untuk menghapus item
+        function deleteItem(itemId, itemType) {
+            if (!currentClass || !confirm('Apakah Anda yakin ingin menghapus item ini?')) return;
+            
+            const itemRef = database.ref(`classes/${currentClass}/${itemType}s/${itemId}`);
+            itemRef.remove()
+                .then(() => {
+                    showNotification('Item berhasil dihapus!', 'success');
+                })
+                .catch((error) => {
+                    console.error(`Error deleting ${itemType}:`, error);
+                    showNotification('Gagal menghapus item', 'error');
+                });
+        }
+
+        // Fungsi untuk menambahkan siswa
+        function addStudent() {
+            if (!currentClass) {
+                showNotification('Pilih kelas terlebih dahulu!', 'error');
+                return;
+            }
+            
+            const name = studentName.value.trim();
+            const role = studentRole.value.trim();
+            
+            if (!name || !role) {
+                showNotification('Nama siswa dan peran harus diisi!', 'error');
+                return;
+            }
+            
+            const studentRef = database.ref(`classes/${currentClass}/students`);
+            const newStudentRef = editingItemId ? 
+                studentRef.child(editingItemId) : 
+                studentRef.push();
+            
+            newStudentRef.set({
+                name,
+                role
+            })
+            .then(() => {
+                const message = editingItemId ? 
+                    'Siswa berhasil diperbarui!' : 
+                    'Siswa berhasil ditambahkan!';
+                
+                showNotification(message, 'success');
+                
+                // Reset form
+                studentName.value = '';
+                studentRole.value = '';
+                editingItemId = null;
+                editingItemType = null;
+            })
+            .catch((error) => {
+                console.error('Error adding/updating student:', error);
+                showNotification('Gagal menambahkan/memperbarui siswa', 'error');
+            });
+        }
+
+        // Fungsi untuk menampilkan siswa
+        function displayStudents(students) {
+            studentList.innerHTML = '';
+            
+            if (students) {
+                Object.entries(students).forEach(([id, student]) => {
+                    const studentElement = document.createElement('div');
+                    studentElement.className = 'list-item';
+                    studentElement.innerHTML = `
+                        <div class="list-item-content">
+                            <strong>${student.name}</strong> - ${student.role}
+                        </div>
+                        <div class="list-item-actions">
+                            <button class="btn btn-warning" onclick="editItem('${id}', 'student', ${JSON.stringify(student).replace(/"/g, '&quot;')})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteItem('${id}', 'student')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    studentList.appendChild(studentElement);
+                });
+            }
+            
+            if (studentList.children.length === 0) {
+                studentList.innerHTML = '<p>Belum ada data siswa untuk kelas ini</p>';
+            }
+        }
+
+        // Fungsi untuk memperbarui denah kelas
+        function updateLayout() {
+            if (!currentClass) {
+                showNotification('Pilih kelas terlebih dahulu!', 'error');
+                return;
+            }
+            
+            const description = classLayout.value.trim();
+            
+            if (!description) {
+                showNotification('Deskripsi denah kelas harus diisi!', 'error');
+                return;
+            }
+            
+            const layoutRef = database.ref(`classes/${currentClass}/layout`);
+            
+            layoutRef.set({
+                description
+            })
+            .then(() => {
+                showNotification('Denah kelas berhasil diperbarui!', 'success');
+            })
+            .catch((error) => {
+                console.error('Error updating layout:', error);
+                showNotification('Gagal memperbarui denah kelas', 'error');
+            });
+        }
+
+        // Fungsi untuk menampilkan denah kelas
+        function displayLayout(layout) {
+            if (layout && layout.description) {
+                classLayout.value = layout.description;
+                layoutPreview.textContent = layout.description;
+            } else {
+                classLayout.value = '';
+                layoutPreview.textContent = 'Belum ada denah kelas yang diatur';
+            }
+        }
+
+        // Fungsi untuk menambahkan jadwal
+        function addSchedule() {
+            if (!currentClass) {
+                showNotification('Pilih kelas terlebih dahulu!', 'error');
+                return;
+            }
+            
+            const day = scheduleDay.value;
+            const subject = scheduleSubject.value.trim();
+            const time = scheduleTime.value.trim();
+            
+            if (!subject || !time) {
+                showNotification('Mata pelajaran dan waktu harus diisi!', 'error');
+                return;
+            }
+            
+            const scheduleRef = database.ref(`classes/${currentClass}/schedule`);
+            const newScheduleRef = editingItemId ? 
+                scheduleRef.child(editingItemId) : 
+                scheduleRef.push();
+            
+            newScheduleRef.set({
+                day,
+                subject,
+                time
+            })
+            .then(() => {
+                const message = editingItemId ? 
+                    'Jadwal berhasil diperbarui!' : 
+                    'Jadwal berhasil ditambahkan!';
+                
+                showNotification(message, 'success');
+                
+                // Reset form
+                scheduleSubject.value = '';
+                scheduleTime.value = '';
+                editingItemId = null;
+                editingItemType = null;
+            })
+            .catch((error) => {
+                console.error('Error adding/updating schedule:', error);
+                showNotification('Gagal menambahkan/memperbarui jadwal', 'error');
+            });
+        }
+
+        // Fungsi untuk menampilkan jadwal
+        function displaySchedule(schedule) {
+            scheduleList.innerHTML = '';
+            
+            if (schedule) {
+                Object.entries(schedule).forEach(([id, item]) => {
+                    const scheduleElement = document.createElement('div');
+                    scheduleElement.className = 'list-item';
+                    scheduleElement.innerHTML = `
+                        <div class="list-item-content">
+                            <strong>${item.day}</strong><br>
+                            ${item.subject}<br>
+                            <small>${item.time}</small>
+                        </div>
+                        <div class="list-item-actions">
+                            <button class="btn btn-warning" onclick="editItem('${id}', 'schedule', ${JSON.stringify(item).replace(/"/g, '&quot;')})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteItem('${id}', 'schedule')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    scheduleList.appendChild(scheduleElement);
+                });
+            }
+            
+            if (scheduleList.children.length === 0) {
+                scheduleList.innerHTML = '<p>Belum ada jadwal untuk kelas ini</p>';
+            }
+        }
+
+        // Fungsi untuk mengosongkan semua data
+        function clearAllData() {
+            taskList.innerHTML = '<p>Pilih kelas untuk melihat tugas</p>';
+            studentList.innerHTML = '<p>Pilih kelas untuk melihat siswa</p>';
+            classLayout.value = '';
+            layoutPreview.textContent = 'Pilih kelas untuk melihat denah';
+            scheduleList.innerHTML = '<p>Pilih kelas untuk melihat jadwal</p>';
+        }
+
+        // Expose functions to global scope for onclick attributes
+        window.deleteTask = deleteItem;
+        window.deleteStudent = deleteItem;
+        window.deleteSchedule = deleteItem;
+        window.deleteClass = deleteClass;
+        window.editItem = editItem;
+
+        // Set today's date as default for deadline field
+        const today = new Date().toISOString().split('T')[0];
+        taskDeadline.value = today;
+    </script>
+</body>
+</html>
